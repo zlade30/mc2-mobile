@@ -1,4 +1,5 @@
 require "securerandom"
+require "shellwords"
 
 default_platform(:ios)
 
@@ -17,12 +18,10 @@ platform :ios do
 
     begin
       if ci_build
-        # GitHub Actions / setup-xcode sets DEVELOPER_DIR; pin active Xcode for gym (avoids wrong co-installed toolchain).
+        # setup-xcode sets DEVELOPER_DIR, but fastlane's xcode_select only mutates ENV — it does not run
+        # `sudo xcode-select`. Align the system default so xcodebuild/gym use the same toolchain as the job.
         dev_dir = ENV["DEVELOPER_DIR"].to_s.strip
-        unless dev_dir.empty?
-          xcode_app = dev_dir.sub(%r{/Contents/Developer\z}, "")
-          xcode_select(xcode_app) if File.directory?(xcode_app)
-        end
+        sh("sudo xcode-select -s #{Shellwords.escape(dev_dir)}") unless dev_dir.empty?
 
         create_keychain(
           name: ci_keychain,
@@ -97,6 +96,7 @@ platform :ios do
         workspace: "ios/Mc.xcworkspace",
         scheme: "Mc",
         configuration: "Release",
+        destination: "generic/platform=iOS",
         export_method: "app-store",
         export_options: export_options_hash,
         codesigning_identity: "Apple Distribution",

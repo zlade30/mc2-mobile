@@ -23,6 +23,19 @@ jobs:
         with:
           xcode-version: "26.4"
 
+      # Xcode 26 on hosted runners: exit 70 + "Found no destinations" / wrong SDK if CLI default
+      # still points at another Xcode or the iOS platform bundle is incomplete. Align xcode-select with
+      # DEVELOPER_DIR and ensure the iOS platform is present before CocoaPods / xcodebuild.
+      - name: Activate Xcode CLI and iOS platform
+        run: |
+          if [ -z "${DEVELOPER_DIR:-}" ]; then
+            echo "DEVELOPER_DIR is unset after setup-xcode"
+            exit 1
+          fi
+          sudo xcode-select -s "$DEVELOPER_DIR"
+          xcodebuild -version
+          xcodebuild -downloadPlatform iOS
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
