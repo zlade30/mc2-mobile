@@ -17,6 +17,13 @@ platform :ios do
 
     begin
       if ci_build
+        # GitHub Actions / setup-xcode sets DEVELOPER_DIR; pin active Xcode for gym (avoids wrong co-installed toolchain).
+        dev_dir = ENV["DEVELOPER_DIR"].to_s.strip
+        unless dev_dir.empty?
+          xcode_app = dev_dir.sub(%r{/Contents/Developer\z}, "")
+          xcode_select(xcode_app) if File.directory?(xcode_app)
+        end
+
         create_keychain(
           name: ci_keychain,
           password: keychain_pw,

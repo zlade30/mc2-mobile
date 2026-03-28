@@ -74,6 +74,7 @@
     "plugins": [
       "expo-router",
       "./plugins/withModularHeaders.js",
+      "./plugins/withPodDeploymentTargetFloor.js",
       [
         "expo-build-properties",
         {
