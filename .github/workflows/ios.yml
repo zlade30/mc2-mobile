@@ -41,6 +41,7 @@ jobs:
 
       - name: Prebuild iOS
         env:
+          # Must match Fastlane/TestFlight app; currently com.mc2.app.test
           EXPO_APP_PACKAGE_NAME: ${{ secrets.IOS_BUNDLE_ID }}
           # Optional; if unset, app.json ios.appleTeamId is used (required for Xcode DEVELOPMENT_TEAM)
           IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
