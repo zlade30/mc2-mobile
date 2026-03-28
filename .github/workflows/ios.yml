@@ -25,14 +25,30 @@ jobs:
 
       # Xcode 26 on hosted runners: exit 70 + "Found no destinations" / wrong SDK if CLI default
       # still points at another Xcode or the iOS platform bundle is incomplete. Align xcode-select with
-      # DEVELOPER_DIR and ensure the iOS platform is present before CocoaPods / xcodebuild.
+      # the chosen Xcode and ensure the iOS platform is present before CocoaPods / xcodebuild.
+      # setup-xcode does not always export DEVELOPER_DIR on macos-26; MD_APPLE_SDK_ROOT is set by the image.
       - name: Activate Xcode CLI and iOS platform
         run: |
-          if [ -z "${DEVELOPER_DIR:-}" ]; then
-            echo "DEVELOPER_DIR is unset after setup-xcode"
+          set -euo pipefail
+          RESOLVED="${DEVELOPER_DIR:-}"
+          if [ -z "$RESOLVED" ] && [ -n "${MD_APPLE_SDK_ROOT:-}" ]; then
+            CANDIDATE="${MD_APPLE_SDK_ROOT}/Contents/Developer"
+            if [ -d "$CANDIDATE" ]; then
+              RESOLVED="$CANDIDATE"
+            fi
+          fi
+          if [ -z "$RESOLVED" ]; then
+            ACTIVE="$(xcode-select -p 2>/dev/null || true)"
+            if [ -n "$ACTIVE" ] && [ -d "$ACTIVE" ]; then
+              RESOLVED="$ACTIVE"
+            fi
+          fi
+          if [ -z "$RESOLVED" ]; then
+            echo "Could not resolve Xcode developer dir (DEVELOPER_DIR unset, MD_APPLE_SDK_ROOT/Contents/Developer missing, xcode-select -p invalid)"
             exit 1
           fi
-          sudo xcode-select -s "$DEVELOPER_DIR"
+          echo "Using DEVELOPER_DIR=$RESOLVED"
+          sudo xcode-select -s "$RESOLVED"
           xcodebuild -version
           xcodebuild -downloadPlatform iOS
 
