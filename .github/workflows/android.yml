@@ -1,0 +1,60 @@
+name: Android Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Write Google Services JSON
+        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > google-services.json
+
+      - name: Decode keystore
+        run: echo '${{ secrets.ANDROID_KEYSTORE_BASE64 }}' | base64 --decode > mc2-keystore.jks
+
+      - name: Prebuild Android
+        env:
+          EXPO_APP_PACKAGE_NAME: ${{ secrets.EXPO_APP_PACKAGE_NAME }}
+          EXPO_PUBLIC_SENTRY_AUTH_TOKEN: ${{ secrets.EXPO_PUBLIC_SENTRY_AUTH_TOKEN }}
+          EXPO_PUBLIC_SENTRY_ORGANIZATION: ${{ secrets.EXPO_PUBLIC_SENTRY_ORGANIZATION }}
+          EXPO_PUBLIC_SENTRY_PROJECT: ${{ secrets.EXPO_PUBLIC_SENTRY_PROJECT }}
+          EXPO_PUBLIC_GOOGLE_SERVICES_FILE: ./google-services.json
+        run: node scripts/bump-version.js && npx expo prebuild --clean --platform android
+
+      - name: Run Fastlane — Android Internal
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/mc2-keystore.jks
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: bundle exec fastlane android internal

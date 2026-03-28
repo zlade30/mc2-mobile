@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "736783786112",
+    "project_id": "mc2-app-eb2a6",
+    "storage_bucket": "mc2-app-eb2a6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:736783786112:android:e15d7d676ca0120ef50665",
+        "android_client_info": {
+          "package_name": "com.mc2.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDN-m0Av2hmlbTk6NDJgpgSsRAT_vNKdXc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

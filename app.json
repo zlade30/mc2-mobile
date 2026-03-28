@@ -1,0 +1,139 @@
+{
+  "expo": {
+    "name": "Mc²",
+    "slug": "mc2app",
+    "version": "1.0.90",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "mc2app",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "appleTeamId": "Y4BQ9LRMZB",
+      "supportsTablet": true,
+      "associatedDomains": [
+        "applinks:deploytest.live",
+        "applinks:admin.malaybalaycitycoffee.com"
+      ],
+      "buildNumber": "82",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSFaceIDUsageDescription": "Unlock the app with Face ID to access your loyalty account",
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      },
+      "icon": {
+        "light": "./assets/images/ios-light.png",
+        "dark": "./assets/images/ios-dark.png",
+        "tinted": "./assets/images/ios-tinted.png"
+      },
+      "entitlements": {
+        "aps-environment": "production"
+      }
+    },
+    "android": {
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "deploytest.live",
+              "pathPrefix": "/reset-password"
+            },
+            {
+              "scheme": "https",
+              "host": "admin.malaybalaycitycoffee.com",
+              "pathPrefix": "/reset-password"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
+      "googleServicesFile": "./google-services.json",
+      "package": "com.mc2.app",
+      "softwareKeyboardLayoutMode": "resize",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "versionCode": 64
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "./plugins/withModularHeaders.js",
+      "./plugins/withPodDeploymentTargetFloor.js",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "16.0"
+          }
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Mc² to access your camera to scan redemption QR codes"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "imageWidth": 250,
+          "ios": {
+            "backgroundColor": "#EDE6DE",
+            "image": "./assets/images/splash-icon-light.png",
+            "resizeMode": "cover",
+            "dark": {
+              "backgroundColor": "#1a1209",
+              "image": "./assets/images/splash-icon-dark.png",
+              "resizeMode": "cover"
+            }
+          },
+          "android": {
+            "backgroundColor": "#EDE6DE",
+            "image": "./assets/images/splash-android-icon.png",
+            "imageWidth": 350,
+            "dark": {
+              "backgroundColor": "#1a1209",
+              "image": "./assets/images/splash-android-icon.png",
+              "imageWidth": 350
+            }
+          }
+        }
+      ],
+      "expo-font",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Unlock the app with Face ID to access your loyalty account"
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

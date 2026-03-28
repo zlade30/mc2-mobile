@@ -1,0 +1,3 @@
+# Two Apple accounts are used — credentials are injected per lane via ENV vars in Fastfile.
+# This default applies only if a lane does not override it.
+app_identifier("com.mc2.app")

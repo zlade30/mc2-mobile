@@ -1,0 +1,77 @@
+name: iOS Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Xcode 26 + iOS 26 SDK
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Stable 26.x (default on image); avoid 26.4 RC if it misbehaves with RN/gym
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.2"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Write Google Services plist
+        run: echo '${{ secrets.GOOGLE_SERVICES_PLIST }}' > GoogleService-Info.plist
+
+      - name: Prebuild iOS
+        env:
+          EXPO_APP_PACKAGE_NAME: ${{ secrets.IOS_BUNDLE_ID }}
+          # Optional; if unset, app.json ios.appleTeamId is used (required for Xcode DEVELOPMENT_TEAM)
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          EXPO_PUBLIC_SENTRY_AUTH_TOKEN: ${{ secrets.EXPO_PUBLIC_SENTRY_AUTH_TOKEN }}
+          EXPO_PUBLIC_SENTRY_ORGANIZATION: ${{ secrets.EXPO_PUBLIC_SENTRY_ORGANIZATION }}
+          EXPO_PUBLIC_SENTRY_PROJECT: ${{ secrets.EXPO_PUBLIC_SENTRY_PROJECT }}
+          EXPO_PUBLIC_GOOGLE_SERVICES_FILE: ./GoogleService-Info.plist
+          NODE_ENV: production
+        run: node scripts/bump-version.js && NODE_ENV=production npx expo prebuild --clean --platform ios
+
+      - name: Install CocoaPods
+        working-directory: ios
+        run: pod install
+
+      # Clone match certs over HTTPS without Basic header (avoids GitHub HTTP 400 from bad base64).
+      # Add repo secret MATCH_GITHUB_PAT = classic PAT with "repo" scope (raw ghp_… only, no base64).
+      - name: Configure Git for match (private certs repo)
+        run: |
+          git config --global url."https://x-access-token:${MATCH_GITHUB_PAT}@github.com/".insteadOf "https://github.com/"
+        env:
+          MATCH_GITHUB_PAT: ${{ secrets.MATCH_GITHUB_PAT }}
+
+      - name: Run Fastlane
+        env:
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+          APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          IOS_BUNDLE_ID: ${{ secrets.IOS_BUNDLE_ID }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          # Optional: fixed password for temp keychain. If unset, Fastlane generates one per run.
+          MATCH_KEYCHAIN_PASSWORD: ${{ secrets.MATCH_KEYCHAIN_PASSWORD }}
+        run: bundle exec fastlane ios beta

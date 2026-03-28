@@ -1,0 +1,138 @@
+require "securerandom"
+
+default_platform(:ios)
+
+platform :ios do
+  lane :beta do
+    ci_keychain = "fastlane_ci_mc2"
+    # Ephemeral CI keychain: optional secret, or random password (keychain is deleted after the lane)
+    keychain_pw = ENV["MATCH_KEYCHAIN_PASSWORD"].to_s.strip
+    # GitHub Actions sets GITHUB_ACTIONS=true; CI may be unset on some images
+    ci_build = ENV["CI"] == "true" || ENV["GITHUB_ACTIONS"] == "true"
+
+    if ci_build && keychain_pw.empty?
+      keychain_pw = SecureRandom.hex(24)
+      UI.message("MATCH_KEYCHAIN_PASSWORD not set — using a one-time password for the ephemeral CI keychain")
+    end
+
+    begin
+      if ci_build
+        create_keychain(
+          name: ci_keychain,
+          password: keychain_pw,
+          default_keychain: true,
+          unlock: true,
+          timeout: 3600,
+          lock_when_sleeps: false
+        )
+      end
+
+      api_key = app_store_connect_api_key(
+        key_id: ENV["APPLE_API_KEY_ID"],
+        issuer_id: ENV["APPLE_API_ISSUER_ID"],
+        key_content: ENV["APPLE_API_KEY_CONTENT"],
+        is_key_content_base64: false
+      )
+
+      match_params = {
+        type: "appstore",
+        readonly: true,
+        git_url: ENV["MATCH_GIT_URL"],
+        app_identifier: ENV["IOS_BUNDLE_ID"],
+        api_key: api_key
+      }
+      if ci_build
+        match_params[:keychain_name] = ci_keychain
+        match_params[:keychain_password] = keychain_pw
+      end
+      match(match_params)
+
+      # Expo prebuild often leaves the app target on manual signing without an App Store profile;
+      # Xcode then looks for "iOS App Development" profiles. Point Release at match's App Store profile.
+      if ci_build
+        bundle_id = ENV["IOS_BUNDLE_ID"].to_s.strip
+        UI.user_error!("IOS_BUNDLE_ID must be set for CI builds") if bundle_id.empty?
+
+        team_id = ENV["IOS_TEAM_ID"].to_s.strip
+        team_id = "Y4BQ9LRMZB" if team_id.empty?
+
+        profile_name = "match AppStore #{bundle_id}"
+
+        update_code_signing_settings(
+          path: "ios/Mc.xcodeproj",
+          use_automatic_signing: false,
+          targets: ["Mc"],
+          team_id: team_id,
+          bundle_identifier: bundle_id,
+          profile_name: profile_name,
+          code_sign_identity: "Apple Distribution",
+          build_configurations: ["Release"],
+          sdk: "iphoneos*"
+        )
+      end
+
+      if ci_build
+        dev = ENV["DEVELOPER_DIR"].to_s.strip
+        if dev.end_with?("/Developer") && dev.include?(".app")
+          xcode_app = dev.sub(%r{/Contents/Developer\z}, "")
+          if File.exist?("#{xcode_app}/Contents/Developer/usr/bin/xcodebuild")
+            xcode_select(xcode_app)
+          end
+        end
+      end
+
+      build_app(
+        workspace: "ios/Mc.xcworkspace",
+        scheme: "Mc",
+        configuration: "Release",
+        export_method: "app-store",
+        export_options: "fastlane/ExportOptions.plist",
+        codesigning_identity: "Apple Distribution"
+      )
+
+      tf_bundle_id = ENV["IOS_BUNDLE_ID"].to_s.strip
+      UI.user_error!("IOS_BUNDLE_ID must be set to upload to TestFlight") if tf_bundle_id.empty?
+
+      tf_team_id = ENV["IOS_TEAM_ID"].to_s.strip
+      tf_team_id = "Y4BQ9LRMZB" if tf_team_id.empty?
+
+      upload_to_testflight(
+        api_key: api_key,
+        app_identifier: tf_bundle_id,
+        team_id: tf_team_id,
+        skip_waiting_for_build_processing: true
+      )
+    ensure
+      if ci_build
+        # Keychain may not exist if we failed before create_keychain (e.g. missing secret)
+        begin
+          delete_keychain(name: ci_keychain)
+        rescue StandardError
+          # ignore
+        end
+      end
+    end
+  end
+end
+
+platform :android do
+  lane :internal do
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      project_dir: "android/",
+      properties: {
+        "android.injected.signing.store.file"     => ENV["KEYSTORE_PATH"],
+        "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias"      => ENV["KEY_ALIAS"],
+        "android.injected.signing.key.password"   => ENV["KEY_PASSWORD"],
+      }
+    )
+
+    upload_to_play_store(
+      track: "internal",
+      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      json_key_data: ENV["GOOGLE_PLAY_JSON_KEY"]
+    )
+  end
+end
