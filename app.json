@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mc²",
     "slug": "mc2app",
-    "version": "1.0.90",
+    "version": "1.0.91",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mc2app",
@@ -19,9 +19,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSFaceIDUsageDescription": "Unlock the app with Face ID to access your loyalty account",
-        "UIBackgroundModes": [
-          "remote-notification"
-        ]
+        "UIBackgroundModes": ["remote-notification"]
       },
       "icon": {
         "light": "./assets/images/ios-light.png",
@@ -49,10 +47,7 @@
               "pathPrefix": "/reset-password"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ],
       "googleServicesFile": "./google-services.json",
@@ -79,7 +74,6 @@
     "plugins": [
       "expo-router",
       "./plugins/withModularHeaders.js",
-      "./plugins/withPodDeploymentTargetFloor.js",
       [
         "expo-build-properties",
         {

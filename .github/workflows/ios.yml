@@ -4,22 +4,24 @@ on:
   push:
     tags:
       - "v*.*.*"
+    branches:
+      - ci-ios-test
   workflow_dispatch:
 
 jobs:
   build:
-    # Xcode 26 + iOS 26 SDK
+    # Xcode 26 + iOS 26 SDK (ITMS-90725: required for uploads after 2026-04-28)
     runs-on: macos-26
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Stable 26.x (default on image); avoid 26.4 RC if it misbehaves with RN/gym
+      # Pin a 26.x release so archives use iOS 26 SDK, not an older co-installed Xcode
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "26.2"
+          xcode-version: "26.4"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -41,7 +43,6 @@ jobs:
 
       - name: Prebuild iOS
         env:
-          # Must match Fastlane/TestFlight app; currently com.mc2.app.test
           EXPO_APP_PACKAGE_NAME: ${{ secrets.IOS_BUNDLE_ID }}
           # Optional; if unset, app.json ios.appleTeamId is used (required for Xcode DEVELOPMENT_TEAM)
           IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
@@ -76,11 +77,3 @@ jobs:
           # Optional: fixed password for temp keychain. If unset, Fastlane generates one per run.
           MATCH_KEYCHAIN_PASSWORD: ${{ secrets.MATCH_KEYCHAIN_PASSWORD }}
         run: bundle exec fastlane ios beta
-
-      - name: Upload Fastlane debug log (session 54106a)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-fastlane-debug-54106a
-          path: .cursor/debug-54106a.log
-          if-no-files-found: ignore
