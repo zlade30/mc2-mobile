@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Reference / manual Xcode export only. The `ios beta` lane in the Fastfile passes export_options
+  built from IOS_BUNDLE_ID so CI does not use a mismatched bundle id or profile name.
+-->
 <plist version="1.0">
 <dict>
   <key>method</key>
@@ -9,12 +13,11 @@
   <key>signingStyle</key>
   <string>manual</string>
   <key>signingCertificate</key>
-  <string>iPhone Distribution</string>
+  <string>Apple Distribution</string>
   <key>provisioningProfiles</key>
   <dict>
-    <!-- Key = bundle ID, Value = provisioning profile name from match -->
-    <key>com.mc2.app.test</key>
-    <string>match AppStore com.mc2.app.test</string>
+    <key>com.mc2.app</key>
+    <string>match AppStore com.mc2.app</string>
   </dict>
   <key>uploadSymbols</key>
   <true/>
