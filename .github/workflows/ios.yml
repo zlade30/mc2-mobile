@@ -75,3 +75,11 @@ jobs:
           # Optional: fixed password for temp keychain. If unset, Fastlane generates one per run.
           MATCH_KEYCHAIN_PASSWORD: ${{ secrets.MATCH_KEYCHAIN_PASSWORD }}
         run: bundle exec fastlane ios beta
+
+      - name: Upload Fastlane debug log (session 54106a)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-fastlane-debug-54106a
+          path: .cursor/debug-54106a.log
+          if-no-files-found: ignore
