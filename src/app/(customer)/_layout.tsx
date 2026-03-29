@@ -117,6 +117,7 @@ export default function CustomerLayout() {
         }
 
         const token = await getToken(messaging);
+        console.log("token", token);
         await registerDeviceMutation.mutateAsync({
           fcm_token: token,
           platform: Platform.OS === "ios" ? "ios" : "android",

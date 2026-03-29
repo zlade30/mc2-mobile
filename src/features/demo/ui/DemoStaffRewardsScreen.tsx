@@ -4,21 +4,15 @@ import { useThemeColor } from "@/shared/hooks/use-theme-color";
 import { MOCK_REDEEMABLE_REWARDS } from "@/shared/lib/demo-data";
 import { getFormattedDate } from "@/shared/lib/utils";
 import { Shadows, Spacing } from "@/shared/theme";
-import {
-  BottomModalView,
-  LocalBottomModal,
-  useLocalBottomModal,
-} from "@/shared/ui/bottom-modal";
 import { PrimaryButton } from "@/shared/ui/button";
 import { ScrollViewWithRefresh } from "@/shared/ui/scroll-view-with-refresh";
 import { ThemedText } from "@/shared/ui/themed-text";
 import { ThemedSafeAreaView } from "@/shared/ui/themed-view";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import Slider from "@react-native-community/slider";
 import { Star as StarBold } from "@solar-icons/react-native/Bold";
 import { Gift } from "@solar-icons/react-native/Broken";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Platform, TouchableOpacity, View } from "react-native";
 import { styled } from "styled-components/native";
 
@@ -145,32 +139,6 @@ const RewardMetaRow = styled.View`
   flex-wrap: wrap;
 `;
 
-const CountModalHint = styled(ThemedText)<{ $color?: string }>`
-  font-size: 13px;
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-  ${({ $color }) => ($color != null ? `color: ${$color};` : "")}
-`;
-
-const SliderWrap = styled.View`
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-`;
-
-const CountValue = styled(ThemedText)<{ $color?: string }>`
-  font-family: Nunito_700Bold;
-  font-size: 18px;
-  text-align: center;
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
-  ${({ $color }) => ($color != null ? `color: ${$color};` : "")}
-`;
-
-const CountModalCancel = styled(TouchableOpacity).attrs(() => ({
-  activeOpacity: 0.8,
-}))`
-  margin-top: ${({ theme }) => theme.spacing.md};
-  padding-vertical: ${({ theme }) => theme.spacing.sm};
-  align-items: center;
-`;
-
 export function DemoStaffRewardsScreen() {
   const router = useRouter();
   const textMuted = useThemeColor({}, "textSecondary");
@@ -182,8 +150,6 @@ export function DemoStaffRewardsScreen() {
     { light: "#F5F0E8", dark: "#F5F0E8" },
     "background",
   );
-  const { showConfirm, showMessage, modalState, hide, getState } =
-    useLocalBottomModal();
   const screenIconColor = useThemeColor({}, "screenIcon");
   const {
     reedemableRewards,
@@ -192,10 +158,6 @@ export function DemoStaffRewardsScreen() {
     setCustomerHashId,
     setIsScanned,
   } = useRewardsStore();
-  const [claimCountModalItem, setClaimCountModalItem] = useState<
-    CustomerRewards["redeemable"][number] | null
-  >(null);
-  const [selectedClaimCount, setSelectedClaimCount] = useState(1);
 
   useEffect(() => {
     if (!isScanned) {
@@ -205,57 +167,13 @@ export function DemoStaffRewardsScreen() {
     }
   }, [isScanned, setReedemableRewards, setCustomerHashId, setIsScanned]);
 
-  const performClaim = useCallback(
-    (item: CustomerRewards["redeemable"][number], claimAmount: number) => {
-      const updated = reedemableRewards.map((reward) =>
-        reward?.id === item.id
-          ? {
-              ...reward,
-              redeemable_count: reward.redeemable_count - claimAmount,
-            }
-          : reward,
-      );
-      const filtered = updated.filter((reward) => reward?.redeemable_count > 0);
-      setReedemableRewards(filtered);
-      setClaimCountModalItem(null);
-      showMessage({
-        title: "Success",
-        message: "The reward has been claimed successfully.",
-      });
-    },
-    [reedemableRewards, setReedemableRewards, showMessage],
-  );
-
-  const handleClaimReward = (
-    item: CustomerRewards["redeemable"][number],
-    claimAmount?: number,
-  ) => {
-    const count = claimAmount ?? 1;
-    const confirmClaim = () => performClaim(item, count);
-
-    if (claimAmount != null) {
-      showConfirm({
-        title: "Confirmation",
-        message: `Claim ${count} of this reward?`,
-        cancelText: "Cancel",
-        confirmText: "Claim",
-        onConfirm: confirmClaim,
-      });
-      return;
-    }
-
-    if (item.redeemable_count > 1) {
-      setSelectedClaimCount(1);
-      setClaimCountModalItem(item);
-      return;
-    }
-
-    showConfirm({
-      title: "Confirmation",
-      message: "Are you sure you want to claim this reward?",
-      cancelText: "Cancel",
-      confirmText: "Claim",
-      onConfirm: confirmClaim,
+  const handleClaimReward = (item: CustomerRewards["redeemable"][number]) => {
+    router.push({
+      pathname: "/(demo)/staff/reward-drinks",
+      params: {
+        rewardRuleId: String(item.id),
+        rewardTitle: item.reward_title,
+      },
     });
   };
 
@@ -289,7 +207,7 @@ export function DemoStaffRewardsScreen() {
                   Scan QR
                 </VerifyOptionText>
               </VerifyOptionButton>
-              <VerifyOptionButton
+              {/* <VerifyOptionButton
                 onPress={() =>
                   router.push("/(demo)/staff/scan-reward?mode=upload")
                 }
@@ -305,7 +223,7 @@ export function DemoStaffRewardsScreen() {
                 <VerifyOptionText $color={cardOnDarkText}>
                   Upload QR
                 </VerifyOptionText>
-              </VerifyOptionButton>
+              </VerifyOptionButton> */}
             </VerifyOptionsRow>
           </VerifySection>
 
@@ -333,6 +251,7 @@ export function DemoStaffRewardsScreen() {
                       <StarBold size={12} color={accentYellow} />
                       <ThemedText type="caption" style={{ color: textMuted }}>
                         {item.points_required} pts
+                        {/* {item.redeemable_count} available */}
                       </ThemedText>
                     </RewardMetaRow>
                     <PrimaryButton
@@ -349,53 +268,6 @@ export function DemoStaffRewardsScreen() {
           ) : null}
         </ScrollContent>
       </Scroll>
-
-      <BottomModalView
-        visible={claimCountModalItem != null}
-        onClose={() => setClaimCountModalItem(null)}
-        title={
-          claimCountModalItem?.reward_title ?? "How many do you want to claim?"
-        }
-      >
-        {claimCountModalItem != null && (
-          <>
-            <CountModalHint $color={textMuted}>
-              This customer can claim up to{" "}
-              {claimCountModalItem.redeemable_count} of this reward.
-            </CountModalHint>
-            <CountValue $color={screenIconColor}>
-              {selectedClaimCount}
-            </CountValue>
-            <SliderWrap>
-              <Slider
-                minimumValue={1}
-                maximumValue={claimCountModalItem.redeemable_count}
-                step={1}
-                value={selectedClaimCount}
-                onValueChange={(v) => setSelectedClaimCount(Math.round(v))}
-                minimumTrackTintColor={screenIconColor}
-                maximumTrackTintColor={textMuted}
-                thumbTintColor={screenIconColor}
-              />
-            </SliderWrap>
-            <PrimaryButton
-              size="small"
-              onPress={() =>
-                handleClaimReward(claimCountModalItem, selectedClaimCount)
-              }
-              leftIcon={<Gift size={16} color={cardOnDarkText} />}
-            >
-              {`Claim ${selectedClaimCount}`}
-            </PrimaryButton>
-            <CountModalCancel onPress={() => setClaimCountModalItem(null)}>
-              <ThemedText type="default" style={{ color: textMuted }}>
-                Cancel
-              </ThemedText>
-            </CountModalCancel>
-          </>
-        )}
-      </BottomModalView>
-      <LocalBottomModal state={modalState} onHide={hide} getState={getState} />
     </Container>
   );
 }

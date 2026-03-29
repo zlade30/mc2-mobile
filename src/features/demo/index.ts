@@ -1,3 +1,4 @@
+export { DemoRewardDrinksScreen } from "./ui/DemoRewardDrinksScreen";
 export { DemoHistoryScreen } from "./ui/DemoHistoryScreen";
 export { DemoHomeScreen } from "./ui/DemoHomeScreen";
 export { DemoProfileScreen } from "./ui/DemoProfileScreen";

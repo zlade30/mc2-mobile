@@ -1,11 +1,10 @@
 import {
-  claimCustomerReward,
-  getStaffItems,
   type StaffItem,
   type StaffItemVariant,
 } from "@/features/rewards";
 import { useRewardsStore } from "@/features/rewards/zustand";
 import { useThemeColor } from "@/shared/hooks/use-theme-color";
+import { MOCK_STAFF_ITEMS } from "@/shared/lib/demo-data";
 import { getErrorMessage } from "@/shared/lib/utils";
 import { Shadows, Spacing } from "@/shared/theme";
 import {
@@ -367,7 +366,7 @@ const getVariantLabel = (variant: StaffItemVariant): string => {
   return values.join(" · ");
 };
 
-export default function RewardDrinksScreen() {
+export function DemoRewardDrinksScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
@@ -429,8 +428,8 @@ export default function RewardDrinksScreen() {
   const rewardTitle = params.rewardTitle ?? "Reward";
 
   const itemsQuery = useQuery({
-    queryKey: ["staff-items"],
-    queryFn: getStaffItems,
+    queryKey: ["demo-staff-items"],
+    queryFn: () => Promise.resolve(MOCK_STAFF_ITEMS),
   });
 
   const filteredItems = useMemo(() => {
@@ -441,13 +440,11 @@ export default function RewardDrinksScreen() {
   }, [itemsQuery.data, drinkFilter]);
 
   const claimMutation = useMutation({
-    mutationFn: async (payload: {
+    mutationFn: async (_payload: {
       reward_rule_id: number;
       claim_amount: number;
       variant_id: string;
-    }) => {
-      await claimCustomerReward(customerHashId, payload);
-    },
+    }) => {},
   });
 
   const rows = useMemo(() => chunkItems(filteredItems, 3), [filteredItems]);
@@ -569,7 +566,7 @@ export default function RewardDrinksScreen() {
                 showMessage({
                   title: "Success",
                   message: "The reward has been claimed successfully.",
-                  onClose: () => router.replace("/(staff)/(tabs)"),
+                  onClose: () => router.replace("/(demo)/staff/(tabs)"),
                 });
               } catch (error) {
                 showMessage({

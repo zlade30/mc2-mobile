@@ -5,6 +5,7 @@ import type {
   RedeemableReward,
   RewardHistory,
   RewardRule,
+  StaffItem,
 } from "@/features/rewards/types";
 
 const now = new Date().toISOString();
@@ -55,6 +56,91 @@ const MOCK_REWARD_RULE: RewardRule = {
   points_remaining: 0,
   progress_percentage: 100,
 };
+
+/** Demo staff reward-drinks grid: 3 drinks, 3 variant choices each. */
+export const MOCK_STAFF_ITEMS: StaffItem[] = [
+  {
+    id: "demo-drink-latte",
+    name: "Café Latte",
+    category_id: "demo-cat-coffee",
+    category_name: "Coffee",
+    image_url: null,
+    variants: [
+      {
+        variant_id: "demo-latte-s",
+        option1_value: "Small",
+        option2_value: null,
+        option3_value: null,
+      },
+      {
+        variant_id: "demo-latte-m",
+        option1_value: "Medium",
+        option2_value: null,
+        option3_value: null,
+      },
+      {
+        variant_id: "demo-latte-l",
+        option1_value: "Large",
+        option2_value: null,
+        option3_value: null,
+      },
+    ],
+  },
+  {
+    id: "demo-drink-cap",
+    name: "Cappuccino",
+    category_id: "demo-cat-coffee",
+    category_name: "Coffee",
+    image_url: null,
+    variants: [
+      {
+        variant_id: "demo-cap-8",
+        option1_value: "8 oz",
+        option2_value: null,
+        option3_value: null,
+      },
+      {
+        variant_id: "demo-cap-12",
+        option1_value: "12 oz",
+        option2_value: null,
+        option3_value: null,
+      },
+      {
+        variant_id: "demo-cap-16",
+        option1_value: "16 oz",
+        option2_value: null,
+        option3_value: null,
+      },
+    ],
+  },
+  {
+    id: "demo-drink-iced",
+    name: "Iced Americano",
+    category_id: "demo-cat-cold",
+    category_name: "Cold drinks",
+    image_url: null,
+    variants: [
+      {
+        variant_id: "demo-iced-reg",
+        option1_value: "Regular ice",
+        option2_value: null,
+        option3_value: null,
+      },
+      {
+        variant_id: "demo-iced-light",
+        option1_value: "Light ice",
+        option2_value: null,
+        option3_value: null,
+      },
+      {
+        variant_id: "demo-iced-shot",
+        option1_value: "Extra shot",
+        option2_value: null,
+        option3_value: null,
+      },
+    ],
+  },
+];
 
 export const MOCK_REDEEMABLE_REWARDS: RedeemableReward[] = [
   {

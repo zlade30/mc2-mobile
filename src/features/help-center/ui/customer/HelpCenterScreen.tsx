@@ -1,5 +1,10 @@
 import React from "react";
-import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import {
+  InteractionManager,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
 import { styled } from "styled-components/native";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +18,7 @@ import { useThemeColor } from "@/shared/hooks/use-theme-color";
 import { getErrorMessage } from "@/shared/lib/utils";
 import {
   LocalBottomModal,
+  showMessage as showGlobalBottomMessage,
   useLocalBottomModal,
 } from "@/shared/ui/bottom-modal";
 import { PrimaryButton } from "@/shared/ui/button";
@@ -158,11 +164,13 @@ function HelpCenterForm() {
         message: data.message,
       });
       reset();
-      showMessage({
-        title: "Message sent",
-        message: "We'll get back to you soon.",
-      });
       router.back();
+      InteractionManager.runAfterInteractions(() => {
+        showGlobalBottomMessage({
+          title: "Message sent",
+          message: "We'll get back to you soon.",
+        });
+      });
     } catch {
       // onError already showed modal
     }

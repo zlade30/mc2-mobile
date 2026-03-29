@@ -1,9 +1,9 @@
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { Suspense, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Modal,
   Pressable,
@@ -14,20 +14,20 @@ import { WebView } from "react-native-webview";
 import { styled } from "styled-components/native";
 
 import { getPromoById } from "@/features/promos/api";
-import { PromoDetailSkeleton } from "./PromoDetailSkeleton";
+import type { Promo } from "@/features/promos/types";
 import { useColorScheme } from "@/shared/hooks/use-color-scheme";
 import { useThemeColor } from "@/shared/hooks/use-theme-color";
 import { Spacing } from "@/shared/theme";
 import { SurfaceCard } from "@/shared/ui/card";
 import { HeaderBackButton } from "@/shared/ui/header-back-button";
+import { PrimaryButton } from "@/shared/ui/button";
 import { ScrollViewWithRefresh } from "@/shared/ui/scroll-view-with-refresh";
 import { ThemedText } from "@/shared/ui/themed-text";
 import { ThemedSafeAreaView } from "@/shared/ui/themed-view";
-import {
-  Tag,
-  UserSpeak,
-} from "@solar-icons/react-native/Broken";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { Tag, UserSpeak } from "@solar-icons/react-native/Broken";
+import { useQuery } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
+import { PromoDetailSkeleton } from "./PromoDetailSkeleton";
 
 dayjs.extend(relativeTime);
 
@@ -161,6 +161,28 @@ const ContentColumn = styled.View`
   position: relative;
 `;
 
+const MessageColumn = styled.View`
+  flex: 1;
+  padding-horizontal: ${({ theme }) => theme.spacing.xxl};
+  justify-content: center;
+  align-items: center;
+`;
+
+const MessageTitle = styled(ThemedText)`
+  text-align: center;
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
+`;
+
+const MessageBody = styled(ThemedText)<{ $color: string }>`
+  text-align: center;
+  margin-bottom: ${({ theme }) => theme.spacing.xl};
+  color: ${({ $color }) => $color};
+`;
+
+function isNotFoundError(error: unknown): boolean {
+  return isAxiosError(error) && error.response?.status === 404;
+}
+
 function buildContentHtml(
   content: string,
   textColor: string,
@@ -180,7 +202,13 @@ function buildContentHtml(
   return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><meta name="color-scheme" content="${colorScheme}" /><style>html,body{${bodyStyle}} *{background-color:transparent !important;} a,a *{color:${primaryColor} !important;}</style></head><body>${content || ""}<script>(function(){var textColor='${textColor}';var linkColor='${primaryColor}';function applyColor(el){if(!el||!(el instanceof Element))return;var isLink=el.tagName==='A'||!!el.closest('a');el.style.removeProperty('color');el.style.removeProperty('background');el.style.removeProperty('background-color');el.style.removeProperty('-webkit-text-fill-color');el.style.removeProperty('text-fill-color');if(!isLink){el.style.setProperty('color',textColor,'important');el.style.setProperty('-webkit-text-fill-color',textColor,'important');}else{el.style.setProperty('color',linkColor,'important');el.style.setProperty('-webkit-text-fill-color',linkColor,'important');}}function sanitize(){applyColor(document.body);var all=document.body?document.body.querySelectorAll('*'):[];for(var i=0;i<all.length;i+=1){applyColor(all[i]);}}sanitize();setTimeout(sanitize,0);setTimeout(sanitize,200);})();</script></body></html>`;
 }
 
-function PromoDetailWithData({ id }: { id: string }) {
+function PromoDetailBody({
+  promo,
+  onRefresh,
+}: {
+  promo: Promo;
+  onRefresh: () => Promise<void>;
+}) {
   const { width, height } = useWindowDimensions();
   const colorScheme = useColorScheme() ?? "light";
   const textMuted = useThemeColor({}, "textSecondary");
@@ -194,11 +222,6 @@ function PromoDetailWithData({ id }: { id: string }) {
   const textColor = useThemeColor({}, "text");
   const [fullImageUri, setFullImageUri] = useState<string | null>(null);
 
-  const { data: promo, refetch } = useSuspenseQuery({
-    queryKey: [...PROMO_QUERY_KEY(id)],
-    queryFn: () => getPromoById(id),
-  });
-
   const [webViewReady, setWebViewReady] = useState(false);
   const [webViewHeight, setWebViewHeight] = useState<number | undefined>(
     undefined,
@@ -206,7 +229,7 @@ function PromoDetailWithData({ id }: { id: string }) {
   useEffect(() => {
     setWebViewReady(false);
     setWebViewHeight(undefined);
-  }, [id]);
+  }, [promo.id]);
 
   const injectedJavaScript = useMemo(
     () => `
@@ -281,9 +304,7 @@ function PromoDetailWithData({ id }: { id: string }) {
       <Scroll
         showsVerticalScrollIndicator={false}
         refreshTintColor={primaryColor}
-        onRefresh={async () => {
-          await refetch();
-        }}
+        onRefresh={onRefresh}
       >
         <ScrollContent>
           <ContentColumn>
@@ -360,6 +381,24 @@ function PromoDetailContent() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string }>();
   const id = params.id;
+  const textMuted = useThemeColor({}, "textSecondary");
+  const primaryColor = useThemeColor({}, "primary");
+  const cardOnDarkText = useThemeColor(
+    { light: "#F5F0E8", dark: "#F5F0E8" },
+    "background",
+  );
+
+  const promoQuery = useQuery({
+    queryKey: [...PROMO_QUERY_KEY(id ?? "")],
+    queryFn: () => getPromoById(id!),
+    enabled: Boolean(id),
+    retry: (failureCount, error) => {
+      if (isNotFoundError(error)) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+  });
 
   useEffect(() => {
     if (!id) {
@@ -371,10 +410,84 @@ function PromoDetailContent() {
     return null;
   }
 
+  if (promoQuery.isPending) {
+    return (
+      <Container>
+        <HeaderRow>
+          <HeaderBackButton
+            backgroundColor={primaryColor}
+            iconColor={cardOnDarkText}
+          />
+          <HeaderLeft>
+            <PageTitle type="title">Overview</PageTitle>
+            <ThemedText type="caption" style={{ color: textMuted }}>
+              Loading…
+            </ThemedText>
+          </HeaderLeft>
+        </HeaderRow>
+        <Scroll
+          showsVerticalScrollIndicator={false}
+          refreshTintColor={primaryColor}
+          onRefresh={async () => {
+            await promoQuery.refetch();
+          }}
+        >
+          <ScrollContent>
+            <PromoDetailSkeleton />
+          </ScrollContent>
+        </Scroll>
+      </Container>
+    );
+  }
+
+  if (promoQuery.isError) {
+    const notFound = isNotFoundError(promoQuery.error);
+    return (
+      <Container>
+        <HeaderRow>
+          <HeaderBackButton
+            backgroundColor={primaryColor}
+            iconColor={cardOnDarkText}
+          />
+          <HeaderLeft>
+            <PageTitle type="title">Overview</PageTitle>
+            <ThemedText type="caption" style={{ color: textMuted }}>
+              {notFound ? "No longer available" : "Something went wrong"}
+            </ThemedText>
+          </HeaderLeft>
+        </HeaderRow>
+        <MessageColumn>
+          <MessageTitle type="title">
+            {notFound ? "This promotion was removed" : "Could not load promotion"}
+          </MessageTitle>
+          <MessageBody type="default" $color={textMuted}>
+            {notFound
+              ? "It may have ended or been taken down. Browse current deals on the Promos tab."
+              : "Check your connection and try again."}
+          </MessageBody>
+          {notFound ? (
+            <PrimaryButton
+              onPress={() => router.replace("/(customer)/(tabs)/promos")}
+            >
+              View promos
+            </PrimaryButton>
+          ) : (
+            <PrimaryButton onPress={() => void promoQuery.refetch()}>
+              Retry
+            </PrimaryButton>
+          )}
+        </MessageColumn>
+      </Container>
+    );
+  }
+
   return (
-    <Suspense fallback={null}>
-      <PromoDetailWithData id={id} />
-    </Suspense>
+    <PromoDetailBody
+      promo={promoQuery.data}
+      onRefresh={async () => {
+        await promoQuery.refetch();
+      }}
+    />
   );
 }
 
