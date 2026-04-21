@@ -23,11 +23,9 @@ jobs:
         with:
           xcode-version: "26.4"
 
-      # Xcode 26 on hosted runners: exit 70 + "Found no destinations" / wrong SDK if CLI default
-      # still points at another Xcode or the iOS platform bundle is incomplete. Align xcode-select with
-      # the chosen Xcode and ensure the iOS platform is present before CocoaPods / xcodebuild.
+      # Xcode 26 on hosted runners: align CLI tools with the selected Xcode before CocoaPods/xcodebuild.
       # setup-xcode does not always export DEVELOPER_DIR on macos-26; MD_APPLE_SDK_ROOT is set by the image.
-      - name: Activate Xcode CLI and iOS platform
+      - name: Activate Xcode CLI
         run: |
           set -euo pipefail
           RESOLVED="${DEVELOPER_DIR:-}"
@@ -48,9 +46,8 @@ jobs:
             exit 1
           fi
           echo "Using DEVELOPER_DIR=$RESOLVED"
-          sudo xcode-select -s "$RESOLVED"
+          export DEVELOPER_DIR="$RESOLVED"
           xcodebuild -version
-          xcodebuild -downloadPlatform iOS
 
       - name: Setup Node
         uses: actions/setup-node@v4
