@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mc²",
     "slug": "mc2app",
-    "version": "1.0.97",
+    "version": "1.0.99",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mc2app",
@@ -15,7 +15,7 @@
         "applinks:deploytest.live",
         "applinks:admin.malaybalaycitycoffee.com"
       ],
-      "buildNumber": "88",
+      "buildNumber": "90",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSFaceIDUsageDescription": "Unlock the app with Face ID to access your loyalty account",
@@ -70,7 +70,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "versionCode": 70
+      "versionCode": 72
     },
     "web": {
       "output": "static",
