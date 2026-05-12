@@ -1,6 +1,12 @@
 import type { ReactNode } from "react";
 import React, { useEffect, useRef, useState } from "react";
-import { Dimensions, Modal, Pressable } from "react-native";
+import {
+  Dimensions,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+} from "react-native";
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -15,6 +21,11 @@ import { ThemedText } from "@/shared/ui/themed-text";
 const ANIMATION_DURATION = 300;
 
 const Overlay = styled.View`
+  flex: 1;
+  justify-content: flex-end;
+`;
+
+const KeyboardAvoider = styled(KeyboardAvoidingView)`
   flex: 1;
   justify-content: flex-end;
 `;
@@ -149,10 +160,15 @@ export function BottomModalView({
           accessibilityRole="button"
           accessibilityLabel="Dismiss"
         />
-        <Panel style={panelStyle} $paddingBottom={paddingBottom}>
-          {title != null && <Title type="subtitle">{title}</Title>}
-          <ContentWrap>{children}</ContentWrap>
-        </Panel>
+        <KeyboardAvoider
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          pointerEvents="box-none"
+        >
+          <Panel style={panelStyle} $paddingBottom={paddingBottom}>
+            {title != null && <Title type="subtitle">{title}</Title>}
+            <ContentWrap>{children}</ContentWrap>
+          </Panel>
+        </KeyboardAvoider>
       </Overlay>
     </Modal>
   );

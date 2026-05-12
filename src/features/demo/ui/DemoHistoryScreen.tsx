@@ -256,7 +256,7 @@ export function DemoHistoryScreen() {
                     <StarsMinimalistic size={18} color={accentYellow} />
                   </PointsIcon>
                   <ActivityStatValue type="caption" $color={accentYellow}>
-                    {user?.loyalty_point?.total_points ?? 0} pts
+                    {user?.loyalty_point?.total_points ?? 0}
                   </ActivityStatValue>
                 </PointsRow>
               </ActivityStatBlock>
@@ -307,7 +307,7 @@ export function DemoHistoryScreen() {
                         type="caption"
                         style={{ color: pointsColor, fontWeight: "semibold" }}
                       >
-                        {pointsLabel} pts
+                        {pointsLabel}
                       </ThemedText>
                     }
                     showBorder={index < pointsHistory.length - 1}

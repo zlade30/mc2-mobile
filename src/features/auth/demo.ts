@@ -44,6 +44,7 @@ export function getMockDemoUser(role: "customer" | "staff"): User {
       },
     ],
     email_verified_at: now,
+    date_of_birth: null,
     loyalty_point: isCustomer
       ? {
           total_points: 240,

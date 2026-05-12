@@ -13,4 +13,13 @@ const getCustomerById = async (id: string) => {
   return response.data;
 };
 
-export { getCustomerById, getCustomerProfile };
+const updateCustomerProfile = async (payload: { date_of_birth: string }) => {
+  const response = await apiClient.put("/customer/profile", payload);
+  const data = response?.data?.data;
+  if (data) {
+    authStore.getState().setUser(data);
+  }
+  return response.data;
+};
+
+export { getCustomerById, getCustomerProfile, updateCustomerProfile };

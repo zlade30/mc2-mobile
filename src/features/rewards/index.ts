@@ -1,4 +1,4 @@
 export * from "./api";
 export * from "./types";
-export { BirthdayRewardSheetModal } from "./ui/customer/BirthdayRewardSheetModal";
+export { BirthdayRewardCard } from "./ui/customer/BirthdayRewardCard";
 export { RewardClaimedPopup } from "./ui/customer/RewardClaimedPopup";

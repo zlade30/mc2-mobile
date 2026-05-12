@@ -6,6 +6,7 @@ import { Platform, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { styled, useTheme } from "styled-components/native";
 
+import { useAuthStore } from "@/features/auth/zustand";
 import { useNotificationBadgeStore } from "@/shared/store";
 import { IconSymbol } from "@/shared/ui/icon-symbol";
 
@@ -103,6 +104,16 @@ const BadgeText = styled.Text`
   color: ${(p) => p.theme.colors.primaryForeground};
 `;
 
+const IndicatorDot = styled.View`
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: ${(p) => p.theme.colors.primary};
+`;
+
 function getBadgeCount(
   routeName: string,
   rewardsCount: number,
@@ -133,6 +144,10 @@ export function CustomTabBarWithCenterCircle({
   const promosCount = useNotificationBadgeStore((s) => s.promosCount);
   const clearRewards = useNotificationBadgeStore((s) => s.clearRewards);
   const clearPromos = useNotificationBadgeStore((s) => s.clearPromos);
+  const user = useAuthStore((s) => s.user);
+  const isCustomer =
+    user?.roles?.some((r) => r.name === "customer") ?? false;
+  const showProfileIndicator = isCustomer && !user?.date_of_birth;
 
   return (
     <BarContainer $insetBottom={bottomInset}>
@@ -194,6 +209,9 @@ export function CustomTabBarWithCenterCircle({
               </>
             );
 
+            const showDotIndicator =
+              route.name === "profile" && showProfileIndicator;
+
             const tabIconWithBadge = (
               <TabItemContent>
                 <BadgeWrapper>
@@ -205,6 +223,7 @@ export function CustomTabBarWithCenterCircle({
                       </BadgeText>
                     </Badge>
                   )}
+                  {badgeCount === 0 && showDotIndicator && <IndicatorDot />}
                 </BadgeWrapper>
               </TabItemContent>
             );

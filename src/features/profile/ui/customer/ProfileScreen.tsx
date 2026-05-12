@@ -26,6 +26,7 @@ import { ThemedSafeAreaView } from "@/shared/ui/themed-view";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import {
   CalendarMinimalistic,
+  Confetti,
   DocumentText,
   FaceScanSquare,
   Gift,
@@ -39,10 +40,11 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useRouter } from "expo-router";
 import React, { Suspense, useCallback, useEffect, useState } from "react";
-import { Switch, Text } from "react-native";
+import { Pressable, Switch, Text } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { styled, useTheme } from "styled-components/native";
 import { ProfileSkeleton } from "./ProfileSkeleton";
+import { UpdateBirthdayModal } from "./UpdateBirthdayModal";
 
 const Container = styled(ThemedSafeAreaView)`
   flex: 1;
@@ -130,6 +132,62 @@ const QrPlaceholder = styled.View`
   height: 200px;
 `;
 
+const BirthdayCard = styled.View`
+  padding: ${({ theme }) => theme.spacing.lg};
+  border-radius: ${({ theme }) => theme.radii.xl};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  background-color: ${({ theme }) => theme.colors.surface};
+  margin-bottom: ${({ theme }) => theme.spacing.xl};
+`;
+
+const BirthdayCardTop = styled.View`
+  flex-direction: row;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.md};
+`;
+
+const BirthdayEmoji = styled.Text`
+  font-size: 56px;
+  line-height: 64px;
+`;
+
+const BirthdayTextCol = styled.View`
+  flex: 1;
+`;
+
+const BirthdayTitle = styled(ThemedText)`
+  font-size: 18px;
+  line-height: 24px;
+  font-family: ${({ theme }) => theme.typography.fontFamily.bold};
+  color: ${({ theme }) => theme.colors.text};
+  margin-bottom: 4px;
+`;
+
+const BirthdaySubtitle = styled(ThemedText)`
+  font-size: 14px;
+  line-height: 20px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+`;
+
+const BirthdayButton = styled(Pressable)`
+  margin-top: ${({ theme }) => theme.spacing.lg};
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  background-color: ${({ theme }) => theme.colors.primary};
+  border-radius: ${({ theme }) => theme.radii.lg};
+  padding-vertical: ${({ theme }) => theme.spacing.md};
+  padding-horizontal: ${({ theme }) => theme.spacing.lg};
+`;
+
+const BirthdayButtonText = styled(ThemedText)`
+  font-size: ${({ theme }) => theme.typography.subtitle}px;
+  font-family: ${({ theme }) => theme.typography.fontFamily.bold};
+  color: ${({ theme }) => theme.colors.primaryFg};
+  margin-right: ${({ theme }) => theme.spacing.sm};
+`;
+
 const CUSTOMER_REWARDS_QUERY_KEY = ["customer-rewards"];
 
 export default function ProfileScreen() {
@@ -159,6 +217,7 @@ function ProfileContent() {
   const [biometricAvailable, setBiometricAvailable] = useState<boolean | null>(
     null,
   );
+  const [birthdayModalVisible, setBirthdayModalVisible] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -275,6 +334,40 @@ function ProfileContent() {
             </QrWrapper>
           </QrCard>
 
+          {!user?.date_of_birth ? (
+            <BirthdayCard>
+              <BirthdayCardTop>
+                <BirthdayEmoji
+                  accessibilityRole="image"
+                  accessibilityLabel="Birthday cake"
+                >
+                  🎂
+                </BirthdayEmoji>
+                <BirthdayTextCol>
+                  <BirthdayTitle type="default">Add your birthday</BirthdayTitle>
+                  <BirthdaySubtitle type="default">
+                    Add your birthday to receive a special reward on your
+                    special day!
+                  </BirthdaySubtitle>
+                </BirthdayTextCol>
+              </BirthdayCardTop>
+              <BirthdayButton
+                accessibilityRole="button"
+                accessibilityLabel="Add your birthday"
+                onPress={() => setBirthdayModalVisible(true)}
+              >
+                <BirthdayButtonText type="default">
+                  Add your birthday
+                </BirthdayButtonText>
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={20}
+                  color={theme.colors.primaryFg}
+                />
+              </BirthdayButton>
+            </BirthdayCard>
+          ) : null}
+
           <SectionTitle type="subtitle">Account</SectionTitle>
           <SurfaceCard $padding={Spacing.sm}>
             <ListRow
@@ -304,6 +397,18 @@ function ProfileContent() {
               }
               showBorder
             />
+            {user?.date_of_birth ? (
+              <ListRow
+                left={<Confetti size={22} color={screenIconColor} />}
+                title="Birthday"
+                right={
+                  <ThemedText type="caption" style={{ color: textColor }}>
+                    {dayjs(user.date_of_birth).format("YYYY-MM-DD")}
+                  </ThemedText>
+                }
+                showBorder
+              />
+            ) : null}
             <ListRow
               left={<Star size={22} color={screenIconColor} />}
               title="Points"
@@ -432,6 +537,10 @@ function ProfileContent() {
         </ScrollContent>
       </Scroll>
       <LocalBottomModal state={modalState} onHide={hide} getState={getState} />
+      <UpdateBirthdayModal
+        visible={birthdayModalVisible}
+        onClose={() => setBirthdayModalVisible(false)}
+      />
     </Container>
   );
 }

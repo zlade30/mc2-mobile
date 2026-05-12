@@ -317,7 +317,7 @@ export function DemoRewardsScreen() {
                       {item.name}
                     </TxCaption>
                     <EligibleBadge $color={textMuted}>
-                      {item.points_required} pts · Eligible to claim
+                      {item.points_required} · Eligible to claim
                     </EligibleBadge>
                     <ClaimButton
                       $borderColor={claimButtonColor}

@@ -10,7 +10,7 @@ import { styled } from "styled-components/native";
 import type { RewardProgressItem } from "@/features/auth";
 import { useAuthStore } from "@/features/auth/zustand";
 import { getPromos } from "@/features/promos";
-import { getCustomerRewards } from "@/features/rewards";
+import { BirthdayRewardCard, getCustomerRewards } from "@/features/rewards";
 import { useRefetchOnAppFocus } from "@/shared/hooks/use-refetch-on-app-focus";
 import { useRefreshOnTabPress } from "@/shared/hooks/use-refresh-on-tab-press";
 import { useThemeColor } from "@/shared/hooks/use-theme-color";
@@ -379,6 +379,9 @@ function HomeContent() {
               </HeaderDateRow>
             </HeaderLeft>
           </Header>
+
+          {/* Birthday reward (only on the user's birthday) */}
+          <BirthdayRewardCard />
 
           {/* 1. Points & next reward card (reference-style with milestones) */}
           <ActivityCard $bg={primaryColor}>

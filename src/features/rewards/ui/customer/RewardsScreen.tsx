@@ -370,7 +370,7 @@ function RewardsContent() {
                 <StarsMinimalistic size={18} color={accentYellow} />
               </PointsIcon>
               <ActivityStatValue $color={accentYellow}>
-                {rewardsData?.current_points ?? 0} pts
+                {rewardsData?.current_points ?? 0}
               </ActivityStatValue>
             </PointsRow>
           </ActivityStatBlock>

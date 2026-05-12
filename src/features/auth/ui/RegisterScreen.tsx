@@ -30,6 +30,7 @@ import {
   LocalBottomModal,
   useLocalBottomModal,
 } from "@/shared/ui/bottom-modal";
+import { BirthdayPickerField } from "@/shared/ui/birthday-picker-field";
 import { LinkButton, PrimaryButton } from "@/shared/ui/button";
 import { HeaderBackButton } from "@/shared/ui/header-back-button";
 import { FormField, Input, PasswordInput } from "@/shared/ui/input";
@@ -286,6 +287,7 @@ export default function RegisterScreen() {
       email: "",
       phone: "",
       password: "",
+      date_of_birth: "",
     },
   });
 
@@ -298,9 +300,11 @@ export default function RegisterScreen() {
       return;
     }
     try {
+      const { date_of_birth, ...rest } = data;
       await registerMutation.mutateAsync({
-        ...data,
-        password_confirmation: data.password,
+        ...rest,
+        password_confirmation: rest.password,
+        date_of_birth,
       });
       showMessage({
         title: "Check your email",
@@ -390,6 +394,26 @@ export default function RegisterScreen() {
                       placeholder="09XXXXXXXXX"
                       keyboardType="phone-pad"
                       maxLength={11}
+                    />
+                  </FormField>
+                )}
+              />
+
+              <Controller
+                control={control}
+                name="date_of_birth"
+                disabled={isLoading}
+                render={({ field: { onChange, value } }) => (
+                  <FormField
+                    label="Birthday"
+                    error={errors.date_of_birth?.message}
+                  >
+                    <BirthdayPickerField
+                      value={value ?? ""}
+                      onChange={onChange}
+                      hasError={Boolean(errors.date_of_birth)}
+                      disabled={isLoading}
+                      placeholder="Pick your birthday"
                     />
                   </FormField>
                 )}

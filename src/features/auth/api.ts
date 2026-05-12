@@ -19,6 +19,7 @@ const register = async (payload: {
   phone: string;
   password: string;
   password_confirmation: string;
+  date_of_birth?: string;
 }): Promise<{ token: string; user: User }> => {
   const response = await apiClient.post("/auth/register", payload);
   const { token } = response.data;

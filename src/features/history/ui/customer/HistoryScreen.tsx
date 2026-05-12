@@ -270,7 +270,7 @@ function HistoryContent() {
                 <StarsMinimalistic size={18} color={accentYellow} />
               </PointsIcon>
               <ActivityStatValue type="caption" $color={accentYellow}>
-                {user?.loyalty_point?.total_points ?? 0} pts
+                {user?.loyalty_point?.total_points ?? 0}
               </ActivityStatValue>
             </PointsRow>
           </ActivityStatBlock>
@@ -337,7 +337,7 @@ function HistoryContent() {
                         type="caption"
                         style={{ color: pointsColor, fontWeight: "semibold" }}
                       >
-                        {pointsLabel} pts
+                        {pointsLabel}
                       </ThemedText>
                     }
                     showBorder={index < Math.min(pointsHistory.length, 5) - 1}

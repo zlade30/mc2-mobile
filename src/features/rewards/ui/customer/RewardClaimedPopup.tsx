@@ -1,12 +1,14 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Modal, Pressable } from "react-native";
 import { ThemeProvider, styled } from "styled-components/native";
 
+import { getCustomerProfile } from "@/features/profile";
 import { useThemeColor } from "@/shared/hooks/use-theme-color";
 import { useRewardClaimPopupStore, useThemeForStyled } from "@/shared/store";
 import { PrimaryButton } from "@/shared/ui/button";
 import { ThemedText } from "@/shared/ui/themed-text";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Backdrop = styled(Pressable)`
   flex: 1;
@@ -56,6 +58,7 @@ function RewardClaimedPopupInner() {
   const textMuted = useThemeColor({}, "textSecondary");
   const visible = useRewardClaimPopupStore((state) => state.visible);
   const payload = useRewardClaimPopupStore((state) => state.payload);
+  const queryClient = useQueryClient();
   const hideRewardClaimPopup = useRewardClaimPopupStore(
     (state) => state.hideRewardClaimPopup,
   );
@@ -68,6 +71,15 @@ function RewardClaimedPopupInner() {
     title: "Congratulations!",
     message: "You have claimed your reward successfully.",
   };
+
+  useEffect(() => {
+    if (visible) {
+      queryClient.fetchQuery({
+        queryKey: ["customerProfile"],
+        queryFn: () => getCustomerProfile(),
+      });
+    }
+  }, [visible, queryClient]);
 
   if (!visible) {
     return null;

@@ -32,3 +32,14 @@ export function getFormattedDate(): string {
   const year = d.getFullYear();
   return `${weekday}, ${month} ${day} ${year}`;
 }
+
+/**
+ * Force-formats user input as YYYY-MM-DD. Strips non-digits, caps at 8 digits,
+ * inserts hyphens after the year and month.
+ */
+export function formatBirthdayInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6)}`;
+}

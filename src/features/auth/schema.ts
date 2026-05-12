@@ -11,6 +11,9 @@ export const loginSchema = z.object({
 /** Philippine mobile: 11 digits starting with 09 (e.g. 09171234567) */
 const phMobileRegex = /^09\d{9}$/;
 
+/** YYYY-MM-DD; lenient on month/day ranges since auto-format guides the user. */
+const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
 export const registerSchema = z.object({
   name: z.string().min(1, { error: "Field is required." }),
   phone: z
@@ -24,6 +27,10 @@ export const registerSchema = z.object({
     .min(1, { error: "Field is required." })
     .pipe(z.email({ error: "Email is invalid." })),
   password: z.string().min(1, { error: "Field is required." }),
+  date_of_birth: z
+    .string()
+    .min(1, { error: "Field is required." })
+    .regex(isoDateRegex, { message: "Use YYYY-MM-DD format." }),
 });
 
 export const changePasswordSchema = z

@@ -39,7 +39,9 @@ export interface User {
   avatar: string | null;
   hashed_id: string;
   roles: Role[];
+  is_birthday_today: boolean;
   email_verified_at: string | null;
+  date_of_birth: string | null;
   loyalty_point: LoyaltyPoint | null;
   reward_progress: RewardProgressItem[] | null;
   created_at: string;

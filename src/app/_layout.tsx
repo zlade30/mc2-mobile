@@ -31,7 +31,6 @@ import {
 } from "@/shared/store";
 import type { AppTheme } from "@/shared/theme";
 import { Colors } from "@/shared/theme";
-import { BirthdayRewardSheetModal } from "@/features/rewards";
 import { BottomModalRoot } from "@/shared/ui/bottom-modal";
 import { ErrorBoundary } from "@/shared/ui/error-boundary";
 import { OfflineGate } from "@/shared/ui/offline-gate";
@@ -144,7 +143,6 @@ function RootLayoutContent() {
               <Stack.Screen name="(staff)" options={{ headerShown: false }} />
             </Stack>
             <BottomModalRoot />
-            <BirthdayRewardSheetModal />
           </OfflineGate>
           <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
         </NavigationThemeProvider>
