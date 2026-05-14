@@ -19,18 +19,25 @@ import { styled } from "styled-components/native";
 import {
   register,
   registerSchema,
+  socialLoginGoogle,
   type RegisterFormData,
+  type Role,
 } from "@/features/auth";
+import {
+  GoogleSignInButton,
+  OrDivider,
+} from "@/features/auth/ui/GoogleSignInButton";
+import { rewardsStore } from "@/features/rewards/zustand";
 import { getTerms } from "@/features/terms/api";
 import { wrapHtmlFragment } from "@/features/terms/wrap-html";
 import { useColorScheme } from "@/shared/hooks/use-color-scheme";
 import { useThemeColor } from "@/shared/hooks/use-theme-color";
 import { getErrorMessage } from "@/shared/lib/utils";
+import { BirthdayPickerField } from "@/shared/ui/birthday-picker-field";
 import {
   LocalBottomModal,
   useLocalBottomModal,
 } from "@/shared/ui/bottom-modal";
-import { BirthdayPickerField } from "@/shared/ui/birthday-picker-field";
 import { LinkButton, PrimaryButton } from "@/shared/ui/button";
 import { HeaderBackButton } from "@/shared/ui/header-back-button";
 import { FormField, Input, PasswordInput } from "@/shared/ui/input";
@@ -274,7 +281,27 @@ export default function RegisterScreen() {
     },
   });
 
-  const isLoading = registerMutation.isPending;
+  const googleMutation = useMutation({
+    mutationFn: socialLoginGoogle,
+    onError: (error) => {
+      console.log("error", error);
+      const message = getErrorMessage(error);
+      if (message.toLowerCase().includes("cancelled")) return;
+      showMessage({ title: "Error", message });
+    },
+    onSuccess: (data) => {
+      rewardsStore.getState().reset();
+      const roles = data.user.roles || [];
+      const isCustomer = roles.some((role: Role) => role.name === "customer");
+      if (isCustomer) {
+        router.replace("/(customer)/(tabs)");
+      } else {
+        router.replace("/(staff)/(tabs)");
+      }
+    },
+  });
+
+  const isLoading = registerMutation.isPending || googleMutation.isPending;
 
   const {
     control,
@@ -462,10 +489,16 @@ export default function RegisterScreen() {
               <PrimaryButton
                 onPress={handleSubmit(onSubmit)}
                 disabled={isLoading}
-                loading={isLoading}
+                loading={registerMutation.isPending}
               >
                 Create account
               </PrimaryButton>
+              <OrDivider />
+              <GoogleSignInButton
+                onPress={() => googleMutation.mutate()}
+                disabled={isLoading}
+                loading={googleMutation.isPending}
+              />
               <LinkButton onPress={() => router.back()}>
                 <ThemedText type="link">
                   Already have an account? Sign in

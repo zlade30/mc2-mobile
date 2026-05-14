@@ -18,9 +18,14 @@ import {
   isDemoCredentials,
   login,
   loginSchema,
+  socialLoginGoogle,
   type LoginFormData,
   type Role,
 } from "@/features/auth";
+import {
+  GoogleSignInButton,
+  OrDivider,
+} from "@/features/auth/ui/GoogleSignInButton";
 import { useAuthStore } from "@/features/auth/zustand";
 import { rewardsStore } from "@/features/rewards/zustand";
 import { useColorScheme } from "@/shared/hooks/use-color-scheme";
@@ -91,7 +96,30 @@ export default function LoginScreen() {
     },
   });
 
-  const isLoading = loginMutation.isPending;
+  const routeAfterAuth = (roles: Role[]) => {
+    const isCustomer = roles.some((role: Role) => role.name === "customer");
+    if (isCustomer) {
+      router.replace("/(customer)/(tabs)");
+    } else {
+      router.replace("/(staff)/(tabs)");
+    }
+  };
+
+  const googleMutation = useMutation({
+    mutationFn: socialLoginGoogle,
+    onError: (error) => {
+      console.log("error", error);
+      const message = getErrorMessage(error);
+      if (message.toLowerCase().includes("cancelled")) return;
+      showMessage({ title: "Error", message });
+    },
+    onSuccess: (data) => {
+      rewardsStore.getState().reset();
+      routeAfterAuth(data.user.roles || []);
+    },
+  });
+
+  const isLoading = loginMutation.isPending || googleMutation.isPending;
 
   const {
     control,
@@ -125,105 +153,115 @@ export default function LoginScreen() {
         password: data.password,
       });
 
-      const roles = response.user.roles || [];
-      const isCustomer = roles.some((role: Role) => role.name === "customer");
-
-      if (isCustomer) {
-        router.replace("/(customer)/(tabs)");
-      } else {
-        router.replace("/(staff)/(tabs)");
-      }
+      routeAfterAuth(response.user.roles || []);
     } catch {
       // onError already showed modal
     }
   };
 
+  const onGooglePress = () => {
+    googleMutation.mutate();
+  };
+
   return (
     <>
-    <ThemedSafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
-        <ScrollContent
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1 }}
+      <ThemedSafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
         >
-          <FormContainer>
-            <Form>
-              {colorScheme === "light" ? (
-                <Logo source={require("@/assets/images/logo.png")} />
-              ) : (
-                <Logo source={require("@/assets/images/logo-dark.png")} />
-              )}
-              <LoginTitle type="title">Welcome back</LoginTitle>
-              <LoginSub type="caption">Your next cup is waiting ☕</LoginSub>
-
-              <Controller
-                control={control}
-                name="email"
-                disabled={isLoading}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <FormField label="Email" first error={errors.email?.message}>
-                    <Input
-                      hasError={Boolean(errors.email)}
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="you@example.com"
-                      autoCapitalize="none"
-                      keyboardType="email-address"
-                      autoComplete="email"
-                    />
-                  </FormField>
+          <ScrollContent
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
+            <FormContainer>
+              <Form>
+                {colorScheme === "light" ? (
+                  <Logo source={require("@/assets/images/logo.png")} />
+                ) : (
+                  <Logo source={require("@/assets/images/logo-dark.png")} />
                 )}
-              />
+                <LoginTitle type="title">Welcome back</LoginTitle>
+                <LoginSub type="caption">Your next cup is waiting ☕</LoginSub>
 
-              <Controller
-                control={control}
-                disabled={isLoading}
-                name="password"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <FormField label="Password" error={errors.password?.message}>
-                    <PasswordInput
-                      hasError={Boolean(errors.password)}
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="••••••••"
-                      autoComplete="password"
-                    />
-                  </FormField>
-                )}
-              />
+                <Controller
+                  control={control}
+                  name="email"
+                  disabled={isLoading}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <FormField
+                      label="Email"
+                      first
+                      error={errors.email?.message}
+                    >
+                      <Input
+                        hasError={Boolean(errors.email)}
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        placeholder="you@example.com"
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        autoComplete="email"
+                      />
+                    </FormField>
+                  )}
+                />
 
-              <PrimaryButton
-                onPress={handleSubmit(onSubmit)}
-                disabled={isLoading}
-                loading={isLoading}
-              >
-                Sign in
-              </PrimaryButton>
-              <View style={{ height: 20 }} />
-              <LinkButton
-                onPress={() => router.push("/(auth)/forgot-password")}
-              >
-                <ThemedText type="link">Forgot password?</ThemedText>
-              </LinkButton>
-              <LinkButton onPress={() => router.push("/(auth)/register")}>
-                <ThemedText type="link">Create an account</ThemedText>
-              </LinkButton>
-              {/* <DemoHint type="caption">
+                <Controller
+                  control={control}
+                  disabled={isLoading}
+                  name="password"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <FormField
+                      label="Password"
+                      error={errors.password?.message}
+                    >
+                      <PasswordInput
+                        hasError={Boolean(errors.password)}
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        placeholder="••••••••"
+                        autoComplete="password"
+                      />
+                    </FormField>
+                  )}
+                />
+
+                <PrimaryButton
+                  onPress={handleSubmit(onSubmit)}
+                  disabled={isLoading}
+                  loading={loginMutation.isPending}
+                >
+                  Sign in
+                </PrimaryButton>
+                <OrDivider />
+                <GoogleSignInButton
+                  onPress={onGooglePress}
+                  disabled={isLoading}
+                  loading={googleMutation.isPending}
+                />
+                <View style={{ height: 20 }} />
+                <LinkButton
+                  onPress={() => router.push("/(auth)/forgot-password")}
+                >
+                  <ThemedText type="link">Forgot password?</ThemedText>
+                </LinkButton>
+                <LinkButton onPress={() => router.push("/(auth)/register")}>
+                  <ThemedText type="link">Create an account</ThemedText>
+                </LinkButton>
+                {/* <DemoHint type="caption">
                 Demo: demo@demo.com / demo (customer), staff@demo.com / demo
                 (staff)
               </DemoHint> */}
-            </Form>
-          </FormContainer>
-        </ScrollContent>
-      </KeyboardAvoidingView>
-    </ThemedSafeAreaView>
-    <LocalBottomModal state={modalState} onHide={hide} getState={getState} />
+              </Form>
+            </FormContainer>
+          </ScrollContent>
+        </KeyboardAvoidingView>
+      </ThemedSafeAreaView>
+      <LocalBottomModal state={modalState} onHide={hide} getState={getState} />
     </>
   );
 }
