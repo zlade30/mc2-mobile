@@ -1,9 +1,10 @@
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import React from "react";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { ActivityIndicator, Image, Pressable } from "react-native";
 import { styled } from "styled-components/native";
 
 import { ThemedText } from "@/shared/ui/themed-text";
+
+const GOOGLE_ICON = require("@/assets/images/google-icon.png");
 
 const Container = styled(Pressable)`
   flex-direction: row;
@@ -22,6 +23,11 @@ const Container = styled(Pressable)`
 const Label = styled(ThemedText)`
   font-size: 16px;
   font-weight: 600;
+`;
+
+const GoogleIcon = styled(Image)`
+  width: 20px;
+  height: 20px;
 `;
 
 const DividerRow = styled.View`
@@ -78,9 +84,7 @@ export function GoogleSignInButton({
         <ActivityIndicator size="small" />
       ) : (
         <>
-          <View>
-            <MaterialCommunityIcons name="google" size={20} color="#DB4437" />
-          </View>
+          <GoogleIcon source={GOOGLE_ICON} resizeMode="contain" />
           <Label>{label}</Label>
         </>
       )}

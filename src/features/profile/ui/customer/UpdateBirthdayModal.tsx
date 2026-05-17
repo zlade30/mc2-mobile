@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { styled, useTheme } from "styled-components/native";
 
 import { getErrorMessage } from "@/shared/lib/utils";
@@ -16,6 +17,11 @@ const Description = styled(ThemedText)`
   font-size: ${({ theme }) => theme.typography.body}px;
   line-height: ${({ theme }) => theme.typography.bodyLineHeight}px;
   color: ${({ theme }) => theme.colors.textSecondary};
+`;
+
+const ConfirmDate = styled(ThemedText)`
+  font-family: ${({ theme }) => theme.typography.fontFamily.semiBold};
+  color: ${({ theme }) => theme.colors.text};
 `;
 
 const ErrorText = styled(ThemedText)`
@@ -39,7 +45,9 @@ const ActionButton = styled(Pressable)<{ $variant: "primary" | "secondary" }>`
   align-items: center;
   justify-content: center;
   background-color: ${({ theme, $variant }) =>
-    $variant === "primary" ? theme.colors.primary : theme.colors.surfaceElevated};
+    $variant === "primary"
+      ? theme.colors.primary
+      : theme.colors.surfaceElevated};
   border-width: ${({ $variant }) => ($variant === "secondary" ? 1 : 0)}px;
   border-color: ${({ theme }) => theme.colors.border};
   opacity: ${({ disabled }) => (disabled ? 0.6 : 1)};
@@ -60,6 +68,8 @@ export type UpdateBirthdayModalProps = {
   onSuccess?: () => void;
 };
 
+type Step = "pick" | "confirm";
+
 export function UpdateBirthdayModal({
   visible,
   onClose,
@@ -69,11 +79,13 @@ export function UpdateBirthdayModal({
   const queryClient = useQueryClient();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<Step>("pick");
 
   useEffect(() => {
     if (visible) {
       setValue("");
       setError(null);
+      setStep("pick");
     }
   }, [visible]);
 
@@ -86,6 +98,7 @@ export function UpdateBirthdayModal({
     },
     onError: (err) => {
       setError(getErrorMessage(err));
+      setStep("pick");
     },
   });
 
@@ -94,7 +107,7 @@ export function UpdateBirthdayModal({
     setError(null);
   }, []);
 
-  const handleSave = useCallback(() => {
+  const handleSavePress = useCallback(() => {
     if (!value) {
       setError("Please pick your birthday.");
       return;
@@ -108,46 +121,99 @@ export function UpdateBirthdayModal({
       setError("Birthday can't be in the future.");
       return;
     }
+    setError(null);
+    setStep("confirm");
+  }, [value]);
+
+  const handleConfirm = useCallback(() => {
     mutation.mutate({ date_of_birth: value });
   }, [mutation, value]);
 
+  const handleBackToPick = useCallback(() => {
+    setStep("pick");
+  }, []);
+
   const isSaving = mutation.isPending;
+  const formattedDate = value
+    ? dayjs(value, "YYYY-MM-DD", true).format("MMMM D, YYYY")
+    : "";
 
   return (
     <BottomModalView
       visible={visible}
       onClose={onClose}
-      title="Add your birthday"
+      title={step === "pick" ? "Add your birthday" : "Confirm your birthday"}
     >
-      <Description type="default">
-        Pick your birthday to receive a special reward on your special day.
-      </Description>
-      <BirthdayDatePicker value={value} onChange={handleChange} />
-      {error ? <ErrorText type="caption">{error}</ErrorText> : null}
-      <ButtonRow>
-        <ActionButton
-          $variant="secondary"
-          onPress={onClose}
-          disabled={isSaving}
-          accessibilityRole="button"
-          accessibilityLabel="Cancel"
+      {step === "pick" ? (
+        <Animated.View
+          key="pick"
+          entering={FadeIn.duration(220)}
+          exiting={FadeOut.duration(150)}
         >
-          <ActionButtonText $variant="secondary">Cancel</ActionButtonText>
-        </ActionButton>
-        <ActionButton
-          $variant="primary"
-          onPress={handleSave}
-          disabled={isSaving}
-          accessibilityRole="button"
-          accessibilityLabel="Save birthday"
+          <Description type="default">
+            Pick your birthday to receive a special reward on your special day.
+          </Description>
+          <BirthdayDatePicker value={value} onChange={handleChange} />
+          {error ? <ErrorText type="caption">{error}</ErrorText> : null}
+          <ButtonRow>
+            <ActionButton
+              $variant="secondary"
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel"
+            >
+              <ActionButtonText $variant="secondary">Cancel</ActionButtonText>
+            </ActionButton>
+            <ActionButton
+              $variant="primary"
+              onPress={handleSavePress}
+              accessibilityRole="button"
+              accessibilityLabel="Save birthday"
+            >
+              <ActionButtonText $variant="primary">Save</ActionButtonText>
+            </ActionButton>
+          </ButtonRow>
+        </Animated.View>
+      ) : (
+        <Animated.View
+          key="confirm"
+          entering={FadeIn.duration(220)}
+          exiting={FadeOut.duration(150)}
         >
-          {isSaving ? (
-            <ActivityIndicator size="small" color={theme.colors.primaryFg} />
-          ) : (
-            <ActionButtonText $variant="primary">Save</ActionButtonText>
-          )}
-        </ActionButton>
-      </ButtonRow>
+          <Description type="default">
+            Set your birthday to{" "}
+            <ConfirmDate type="default">{formattedDate}</ConfirmDate>?
+          </Description>
+          {error ? <ErrorText type="caption">{error}</ErrorText> : null}
+          <ButtonRow>
+            <ActionButton
+              $variant="secondary"
+              onPress={handleBackToPick}
+              disabled={isSaving}
+              accessibilityRole="button"
+              accessibilityLabel="Back"
+            >
+              <ActionButtonText $variant="secondary">Back</ActionButtonText>
+            </ActionButton>
+            <ActionButton
+              $variant="primary"
+              onPress={handleConfirm}
+              disabled={isSaving}
+              accessibilityRole="button"
+              accessibilityLabel="Confirm birthday"
+            >
+              {isSaving ? (
+                <ActivityIndicator
+                  size="small"
+                  color={theme.colors.primaryFg}
+                />
+              ) : (
+                <ActionButtonText $variant="primary">Confirm</ActionButtonText>
+              )}
+            </ActionButton>
+          </ButtonRow>
+        </Animated.View>
+      )}
     </BottomModalView>
   );
 }
