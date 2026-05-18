@@ -4,7 +4,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from "axios";
 
-const baseURL = "https://deploytest.live/api/v1";
+const baseURL = "https://admin.malaybalaycitycoffee.com/api/v1";
 
 export const apiClient = axios.create({
   baseURL,
