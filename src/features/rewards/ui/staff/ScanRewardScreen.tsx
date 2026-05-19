@@ -534,7 +534,7 @@ export default function ScanRewardScreen() {
             <FooterText>
               Point the camera at the customer&apos;s redemption QR code
             </FooterText>
-            <UploadQrButton
+            {/* <UploadQrButton
               onPress={handleUploadQr}
               disabled={uploadingScanning}
               accessibilityLabel="Upload QR code from gallery"
@@ -552,7 +552,7 @@ export default function ScanRewardScreen() {
                   </UploadQrButtonText>
                 </>
               )}
-            </UploadQrButton>
+            </UploadQrButton> */}
           </FooterWrap>
         )}
       </Container>
