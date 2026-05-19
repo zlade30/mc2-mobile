@@ -139,7 +139,7 @@ export function BirthdayRewardCard() {
           <HeroTitle type="default">Happy Birthday, {firstName}! 🎉</HeroTitle>
           <HeroSubtitle type="default">
             To celebrate your special day, we have given you a birthday reward.
-            Valid for 7 days — redeem it now and enjoy your day! 🎂🎁
+            Valid for 7 days — claim it now and enjoy your day! 🎂🎁
           </HeroSubtitle>
           <ClaimButton
             accessibilityRole="button"
